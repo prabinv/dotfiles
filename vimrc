@@ -1,116 +1,78 @@
-" Use Vim settings, rather then Vi settings. This setting must be as early as
-" possible, as it has side effects.
-set nocompatible
+" Leader
+let mapleader = " "
 
+set backspace=2   " Backspace deletes like most programs in insert mode
+set nobackup
+set nowritebackup
+set noswapfile    " http://robots.thoughtbot.com/post/18739402579/global-gitignore#comment-458413287
+set history=50
+set ruler         " show the cursor position all the time
+set showcmd       " display incomplete commands
+set incsearch     " do incremental searching
+set laststatus=2  " Always display the status line
+set autowrite     " Automatically :write before running commands
 
-" turn on syntax highlighting
-syntax on
-" and show line numbers
-set number
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if (&t_Co > 2 || has("gui_running")) && !exists("syntax_on")
+  syntax on
+endif
 
-" make vim try to detect file types and load plugins for them
-filetype on
-filetype plugin on
-filetype indent on
+if filereadable(expand("~/.vimrc.bundles"))
+  source ~/.vimrc.bundles
+endif
 
-" reload files changed outside vim
-set autoread
+" Load matchit.vim, but only if the user hasn't installed a newer version.
+if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
+  runtime! macros/matchit.vim
+endif
 
-" encoding is utf 8
-set encoding=utf-8
-set fileencoding=utf-8
+filetype plugin indent on
 
-" enable matchit plugin which ships with vim and greatly enhances '%'
-runtime macros/matchit.vim
+augroup vimrcEx
+  autocmd!
 
-" by default, in insert mode backspace won't delete over line breaks, or
-" automatically-inserted indentation, let's change that
-set backspace=indent,eol,start
-" set unix line endings
-set fileformat=unix
+  " When editing a file, always jump to the last known cursor position.
+  " Don't do it for commit messages, when the position is invalid, or when
+  " inside an event handler (happens when dropping a file on gvim).
+  autocmd BufReadPost *
+    \ if &ft != 'gitcommit' && line("'\"") > 0 && line("'\"") <= line("$") |
+    \   exe "normal g`\"" |
+    \ endif
 
-" when reading files try unix line endings then dos, also use unix for new
-" buffers
-set fileformats=unix,dos
+  " Set syntax highlighting for specific file types
+  autocmd BufRead,BufNewFile Appraisals set filetype=ruby
+  autocmd BufRead,BufNewFile *.md set filetype=markdown
+  autocmd BufRead,BufNewFile .{jscs,jshint,eslint}rc set filetype=json
+augroup END
 
-" save up to 100 marks, enable capital marks
-set viminfo='100,f1
+" When the type of shell script is /bin/sh, assume a POSIX-compatible
+" shell for syntax highlighting purposes.
+let g:is_posix = 1
 
-
-" screen will not be redrawn while running macros, registers or other
-" non-typed comments
-set lazyredraw
-
-" ---------------------- CUSTOMIZATION ----------------------
-"  The following are some extra mappings/configs to enhance my personal
-"  VIM experience
-
-" set , as mapleader
-let mapleader = ","
+" Softtabs, 2 spaces
+set tabstop=2
+set shiftwidth=2
+set shiftround
+set expandtab
 
 " map <leader>q and <leader>w to buffer prev/next buffer
 noremap <leader>q :bp<CR>
 noremap <leader>w :bn<CR>
 
-" windows like clipboard
-" yank to and paste from the clipboard without prepending "* to commands
-let &clipboard = has('unnamedplus') ? 'unnamedplus' : 'unnamed'
-" map c-x and c-v to work as they do in windows, only in insert mode
-vm <c-x> "+x
-vm <c-c> "+y
-cno <c-v> <c-r>+
-exe 'ino <script> <C-V>' paste#paste_cmd['i']
+" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
+if executable('ag')
+  " Use Ag over Grep
+  set grepprg=ag\ --nogroup\ --nocolor
 
-" save with ctrl+s
-nmap <c-s> :w<CR>
-imap <c-s> <Esc>:w<CR>a
+  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+  let g:ctrlp_user_command = 'ag -Q -l --nocolor --hidden -g "" %s'
 
-" hide unnecessary gui in gVim
-if has("gui_running")
-    set guioptions-=m  " remove menu bar
-    set guioptions-=T  " remove toolbar
-    set guioptions-=r  " remove right-hand scroll bar
-    set guioptions-=L  " remove left-hand scroll bar
-end
+  " ag is fast enough that CtrlP doesn't need to cache
+  let g:ctrlp_use_caching = 0
+endif
 
-" set Adobe's Source Code Pro font as default
-set guifont=Source\ Code\ Pro
-
-" allow Tab and Shift+Tab to
-" tab  selection in visual mode
-vmap <Tab> >gv
-vmap <S-Tab> <gv
-
-" remove the .ext~ files, but not the swapfiles
-set nobackup
-set writebackup
-set noswapfile
-
-" search settings
-set incsearch        " find the next match as we type the search
-set hlsearch         " hilight searches by default
-" use ESC to remove search higlight
-nnoremap <esc> :noh<return><esc>
-
-" most of the time I should use ` instead of ' but typing it with my keyabord
-" is a pain, so just toggle them
-nnoremap ' `
-nnoremap ` '
-
-" suggestion for normal mode commands
-set wildmode=list:longest
-
-" keep the cursor visible within 3 lines when scrolling
-set scrolloff=3
-
-" indentation
-set expandtab       " use spaces instead of tabs
-set autoindent      " autoindent based on line above, works most of the time
-set smartindent     " smarter indent for C-like languages
-set shiftwidth=4    " when reading, tabs are 4 spaces
-set softtabstop=4   " in insert mode, tabs are 4 spaces
-
-" no lines longer than 80 cols
+" Make it obvious where 80 characters is
 set textwidth=80
 
 " use <C-Space> for Vim's keyword autocomplete
@@ -119,32 +81,23 @@ inoremap <Nul> <C-n>
 "  ...and in gui mode
 inoremap <C-Space> <C-n>
 
-" On file types...
-"   .md files are markdown files
-autocmd BufNewFile,BufRead *.md setlocal ft=markdown
-"   .twig files use html syntax
-autocmd BufNewFile,BufRead *.twig setlocal ft=html
-"   .less files use less syntax
-autocmd BufNewFile,BufRead *.less setlocal ft=less
-"   .jade files use jade syntax
-autocmd BufNewFile,BufRead *.jade setlocal ft=jade
+" Tab completion
+" will insert tab at beginning of line,
+" will use completion if not at beginning
+set wildmode=list:longest,list:full
+function! InsertTabWrapper()
+    let col = col('.') - 1
+    if !col || getline('.')[col - 1] !~ '\k'
+        return "\<tab>"
+    else
+        return "\<c-p>"
+    endif
+endfunction
+inoremap <Tab> <c-r>=InsertTabWrapper()<cr>
+inoremap <S-Tab> <c-n>
 
-" when pasting over SSH it's a pain to type :set paste and :set nopaste
-" just map it to <f9>
-set pastetoggle=<f9>
-
-" if windows...
-if has('win32')
-    " start maximized
-    autocmd GUIEnter * simalt ~x
-    " also use .vim instead of vimfiles, make sure to run the following command
-    " once this was copied to /Users/<user>/.vim
-    "  mklink %homepath%/.vimrc %homepath%/.vim/.vimrc
-    let &runtimepath.=',$HOME/.vim'
-endif
-
-" select all mapping
-noremap <leader>a ggVG
+" Switch between the last two files
+nnoremap <leader><leader> <c-^>
 
 " ---------------------- PLUGIN CONFIGURATION ----------------------
 " initiate Vundle
@@ -153,21 +106,12 @@ call vundle#begin()
 " let Vundle manage Vundle, required
 Plugin 'gmarik/Vundle.vim'
 
-" start plugin defintion
-Plugin 'scrooloose/nerdtree'
-Plugin 'vim-scripts/L9'
-Plugin 'vim-scripts/FuzzyFinder'
-Plugin 'itchyny/lightline.vim'
-Plugin 'Lokaltog/vim-easymotion'
-Plugin 'tpope/vim-surround'
-" -- Web Development
-Plugin 'Shutnik/jshint2.vim'
-Plugin 'mattn/emmet-vim'
-Plugin 'kchmck/vim-coffee-script'
-Plugin 'groenewege/vim-less'
-Plugin 'skammer/vim-css-color'
-Plugin 'hail2u/vim-css3-syntax'
-Plugin 'digitaltoad/vim-jade'
+" vim-test mappings
+nnoremap <silent> <Leader>t :TestFile<CR>
+nnoremap <silent> <Leader>s :TestNearest<CR>
+nnoremap <silent> <Leader>l :TestLast<CR>
+nnoremap <silent> <Leader>a :TestSuite<CR>
+nnoremap <silent> <leader>gt :TestVisit<CR>
 
 " end plugin definition
 call vundle#end()            " required for vundle
@@ -183,14 +127,21 @@ noremap <leader>f :FufFile<cr>
 " use zencoding with <C-E>
 let g:user_emmet_leader_key = '<c-e>'
 
-" run JSHint when a file with .js extension is saved
-" this requires the jsHint2 plugin
-autocmd BufWritePost *.js silent :JSHint
+" configure syntastic syntax checking to check on open as well as save
+let g:syntastic_check_on_open=1
+let g:syntastic_html_tidy_ignore_errors=[" proprietary attribute \"ng-"]
+let g:syntastic_eruby_ruby_quiet_messages =
+    \ {"regex": "possibly useless use of a variable in void context"}
 
-" make a mark for column 80
-set colorcolumn=80
-" and set the mark color to DarkSlateGray
-highlight ColorColumn ctermbg=lightgray guibg=lightgray
+" Set spellfile to location that is guaranteed to exist, can be symlinked to
+" Dropbox or kept in Git and managed outside of thoughtbot/dotfiles using rcm.
+set spellfile=$HOME/.vim-spell-en.utf-8.add
+
+" Autocomplete with dictionary words when spell check is on
+set complete+=kspell
+
+" Always use vertical diffs
+set diffopt+=vertical
 
 " Local config
 if filereadable($HOME . "/.vimrc.local")
