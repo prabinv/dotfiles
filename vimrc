@@ -2,159 +2,195 @@
 " possible, as it has side effects.
 set nocompatible
 
-" Leader
-let mapleader = " "
 
-set backspace=2   " Backspace deletes like most programs in insert mode
-set nobackup
-set nowritebackup
-set noswapfile    " http://robots.thoughtbot.com/post/18739402579/global-gitignore#comment-458413287
-set history=50
-set ruler         " show the cursor position all the time
-set showcmd       " display incomplete commands
-set incsearch     " do incremental searching
-set laststatus=2  " Always display the status line
-set autowrite     " Automatically :write before running commands
-
-" Switch syntax highlighting on, when the terminal has colors
-" Also switch on highlighting the last used search pattern.
-if (&t_Co > 2 || has("gui_running")) && !exists("syntax_on")
-  syntax on
-endif
-
-if filereadable(expand("~/.vimrc.bundles"))
-  source ~/.vimrc.bundles
-endif
-
-filetype plugin indent on
-
-augroup vimrcEx
-  autocmd!
-
-  " When editing a file, always jump to the last known cursor position.
-  " Don't do it for commit messages, when the position is invalid, or when
-  " inside an event handler (happens when dropping a file on gvim).
-  autocmd BufReadPost *
-    \ if &ft != 'gitcommit' && line("'\"") > 0 && line("'\"") <= line("$") |
-    \   exe "normal g`\"" |
-    \ endif
-
-  " Cucumber navigation commands
-  autocmd User Rails Rnavcommand step features/step_definitions -glob=**/* -suffix=_steps.rb
-  autocmd User Rails Rnavcommand config config -glob=**/* -suffix=.rb -default=routes
-
-  " Set syntax highlighting for specific file types
-  autocmd BufRead,BufNewFile Appraisals set filetype=ruby
-  autocmd BufRead,BufNewFile *.md set filetype=markdown
-
-  " Enable spellchecking for Markdown
-  autocmd FileType markdown setlocal spell
-
-  " Automatically wrap at 80 characters for Markdown
-  autocmd BufRead,BufNewFile *.md setlocal textwidth=80
-
-  " Automatically wrap at 72 characters for git commit messages
-  autocmd FileType gitcommit setlocal textwidth=72
-
-  " Allow stylesheets to autocomplete hyphenated words
-  autocmd FileType css,scss,sass setlocal iskeyword+=-
-augroup END
-
-" Softtabs, 2 spaces
-set tabstop=2
-set shiftwidth=2
-set shiftround
-set expandtab
-
-" Display extra whitespace
-set list listchars=tab:»·,trail:·,nbsp:·
-
-" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
-if executable('ag')
-  " Use Ag over Grep
-  set grepprg=ag\ --nogroup\ --nocolor
-
-  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
-
-  " ag is fast enough that CtrlP doesn't need to cache
-  let g:ctrlp_use_caching = 0
-endif
-
-" Color scheme
-colorscheme github
-highlight NonText guibg=#060606
-highlight Folded  guibg=#0A0A0A guifg=#9090D0
-
-" Make it obvious where 80 characters is
-set textwidth=80
-set colorcolumn=+1
-
-" Numbers
+" turn on syntax highlighting
+syntax on
+" and show line numbers
 set number
-set numberwidth=5
 
-" Tab completion
-" will insert tab at beginning of line,
-" will use completion if not at beginning
-set wildmode=list:longest,list:full
-function! InsertTabWrapper()
-    let col = col('.') - 1
-    if !col || getline('.')[col - 1] !~ '\k'
-        return "\<tab>"
-    else
-        return "\<c-p>"
-    endif
-endfunction
-inoremap <Tab> <c-r>=InsertTabWrapper()<cr>
-inoremap <S-Tab> <c-n>
+" make vim try to detect file types and load plugins for them
+filetype on
+filetype plugin on
+filetype indent on
 
-" Exclude Javascript files in :Rtags via rails.vim due to warnings when parsing
-let g:Tlist_Ctags_Cmd="ctags --exclude='*.js'"
+" reload files changed outside vim
+set autoread
 
-" Index ctags from any project, including those outside Rails
-map <Leader>ct :!ctags -R .<CR>
+" encoding is utf 8
+set encoding=utf-8
+set fileencoding=utf-8
 
-" Switch between the last two files
-nnoremap <leader><leader> <c-^>
+" enable matchit plugin which ships with vim and greatly enhances '%'
+runtime macros/matchit.vim
 
-" Get off my lawn
-nnoremap <Left> :echoe "Use h"<CR>
-nnoremap <Right> :echoe "Use l"<CR>
-nnoremap <Up> :echoe "Use k"<CR>
-nnoremap <Down> :echoe "Use j"<CR>
+" by default, in insert mode backspace won't delete over line breaks, or
+" automatically-inserted indentation, let's change that
+set backspace=indent,eol,start
+" set unix line endings
+set fileformat=unix
 
-" vim-rspec mappings
-nnoremap <Leader>t :call RunCurrentSpecFile()<CR>
-nnoremap <Leader>s :call RunNearestSpec()<CR>
-nnoremap <Leader>l :call RunLastSpec()<CR>
+" when reading files try unix line endings then dos, also use unix for new
+" buffers
+set fileformats=unix,dos
 
-" Run commands that require an interactive shell
-nnoremap <Leader>r :RunInInteractiveShell<space>
+" save up to 100 marks, enable capital marks
+set viminfo='100,f1
 
-" Treat <li> and <p> tags like the block tags they are
-let g:html_indent_tags = 'li\|p'
 
-" Open new split panes to right and bottom, which feels more natural
-set splitbelow
-set splitright
+" screen will not be redrawn while running macros, registers or other
+" non-typed comments
+set lazyredraw
 
-" Quicker window movement
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-h> <C-w>h
-nnoremap <C-l> <C-w>l
+" ---------------------- CUSTOMIZATION ----------------------
+"  The following are some extra mappings/configs to enhance my personal
+"  VIM experience
 
-" configure syntastic syntax checking to check on open as well as save
-let g:syntastic_check_on_open=1
-let g:syntastic_html_tidy_ignore_errors=[" proprietary attribute \"ng-"]
+" set , as mapleader
+let mapleader = ","
 
-" Set spellfile to location that is guaranteed to exist, can be symlinked to
-" Dropbox or kept in Git and managed outside of thoughtbot/dotfiles using rcm.
-set spellfile=$HOME/.vim-spell-en.utf-8.add
+" map <leader>q and <leader>w to buffer prev/next buffer
+noremap <leader>q :bp<CR>
+noremap <leader>w :bn<CR>
 
-" Always use vertical diffs
-set diffopt+=vertical
+" windows like clipboard
+" yank to and paste from the clipboard without prepending "* to commands
+let &clipboard = has('unnamedplus') ? 'unnamedplus' : 'unnamed'
+" map c-x and c-v to work as they do in windows, only in insert mode
+vm <c-x> "+x
+vm <c-c> "+y
+cno <c-v> <c-r>+
+exe 'ino <script> <C-V>' paste#paste_cmd['i']
+
+" save with ctrl+s
+nmap <c-s> :w<CR>
+imap <c-s> <Esc>:w<CR>a
+
+" hide unnecessary gui in gVim
+if has("gui_running")
+    set guioptions-=m  " remove menu bar
+    set guioptions-=T  " remove toolbar
+    set guioptions-=r  " remove right-hand scroll bar
+    set guioptions-=L  " remove left-hand scroll bar
+end
+
+" set Adobe's Source Code Pro font as default
+set guifont=Source\ Code\ Pro
+
+" allow Tab and Shift+Tab to
+" tab  selection in visual mode
+vmap <Tab> >gv
+vmap <S-Tab> <gv
+
+" remove the .ext~ files, but not the swapfiles
+set nobackup
+set writebackup
+set noswapfile
+
+" search settings
+set incsearch        " find the next match as we type the search
+set hlsearch         " hilight searches by default
+" use ESC to remove search higlight
+nnoremap <esc> :noh<return><esc>
+
+" most of the time I should use ` instead of ' but typing it with my keyabord
+" is a pain, so just toggle them
+nnoremap ' `
+nnoremap ` '
+
+" suggestion for normal mode commands
+set wildmode=list:longest
+
+" keep the cursor visible within 3 lines when scrolling
+set scrolloff=3
+
+" indentation
+set expandtab       " use spaces instead of tabs
+set autoindent      " autoindent based on line above, works most of the time
+set smartindent     " smarter indent for C-like languages
+set shiftwidth=4    " when reading, tabs are 4 spaces
+set softtabstop=4   " in insert mode, tabs are 4 spaces
+
+" no lines longer than 80 cols
+set textwidth=80
+
+" use <C-Space> for Vim's keyword autocomplete
+"  ...in the terminal
+inoremap <Nul> <C-n>
+"  ...and in gui mode
+inoremap <C-Space> <C-n>
+
+" On file types...
+"   .md files are markdown files
+autocmd BufNewFile,BufRead *.md setlocal ft=markdown
+"   .twig files use html syntax
+autocmd BufNewFile,BufRead *.twig setlocal ft=html
+"   .less files use less syntax
+autocmd BufNewFile,BufRead *.less setlocal ft=less
+"   .jade files use jade syntax
+autocmd BufNewFile,BufRead *.jade setlocal ft=jade
+
+" when pasting over SSH it's a pain to type :set paste and :set nopaste
+" just map it to <f9>
+set pastetoggle=<f9>
+
+" if windows...
+if has('win32')
+    " start maximized
+    autocmd GUIEnter * simalt ~x
+    " also use .vim instead of vimfiles, make sure to run the following command
+    " once this was copied to /Users/<user>/.vim
+    "  mklink %homepath%/.vimrc %homepath%/.vim/.vimrc
+    let &runtimepath.=',$HOME/.vim'
+endif
+
+" select all mapping
+noremap <leader>a ggVG
+
+" ---------------------- PLUGIN CONFIGURATION ----------------------
+" initiate Vundle
+let &runtimepath.=',$HOME/.vim/bundle/Vundle.vim'
+call vundle#begin()
+" let Vundle manage Vundle, required
+Plugin 'gmarik/Vundle.vim'
+
+" start plugin defintion
+Plugin 'scrooloose/nerdtree'
+Plugin 'vim-scripts/L9'
+Plugin 'vim-scripts/FuzzyFinder'
+Plugin 'itchyny/lightline.vim'
+Plugin 'Lokaltog/vim-easymotion'
+Plugin 'tpope/vim-surround'
+" -- Web Development
+Plugin 'Shutnik/jshint2.vim'
+Plugin 'mattn/emmet-vim'
+Plugin 'kchmck/vim-coffee-script'
+Plugin 'groenewege/vim-less'
+Plugin 'skammer/vim-css-color'
+Plugin 'hail2u/vim-css3-syntax'
+Plugin 'digitaltoad/vim-jade'
+
+" end plugin definition
+call vundle#end()            " required for vundle
+
+" start NERDTree on start-up and focus active window
+autocmd VimEnter * NERDTree
+autocmd VimEnter * wincmd p
+
+" map FuzzyFinder
+noremap <leader>b :FufBuffer<cr>
+noremap <leader>f :FufFile<cr>
+
+" use zencoding with <C-E>
+let g:user_emmet_leader_key = '<c-e>'
+
+" run JSHint when a file with .js extension is saved
+" this requires the jsHint2 plugin
+autocmd BufWritePost *.js silent :JSHint
+
+" make a mark for column 80
+set colorcolumn=80
+" and set the mark color to DarkSlateGray
+highlight ColorColumn ctermbg=lightgray guibg=lightgray
 
 " Local config
 if filereadable($HOME . "/.vimrc.local")
