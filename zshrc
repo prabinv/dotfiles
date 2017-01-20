@@ -39,6 +39,9 @@ _load_settings() {
 }
 _load_settings "$HOME/.zsh/configs"
 
+fpath=(~/.zsh/completions $fpath)
+autoload -U compinit && compinit
+
 # aliases
 [[ -f ~/.aliases ]] && source ~/.aliases
 
