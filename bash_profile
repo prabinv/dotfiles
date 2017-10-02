@@ -3,8 +3,11 @@
 # Load RVM, if you are using it
 #source ~/.profile
 
-source /Users/prabin_varma/.dnx/dnvm/dnvm.sh
+# source /Users/prabin_varma/.dnx/dnvm/dnvm.sh
 
+if [ -f ~/.bashrc ]; then
+    source ~/.bashrc
+fi
 
 #export $PATH=$(brew --prefix coreutils)/libexec/gnubin:$PATH
 
