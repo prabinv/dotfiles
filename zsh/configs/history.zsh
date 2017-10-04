@@ -1,4 +1,1 @@
-setopt hist_ignore_all_dups inc_append_history
-HISTFILE=~/.zhistory
-HISTSIZE=4096
-SAVEHIST=4096
+/Users/prabin_varma/Documents/Github/dotfiles/zsh/configs/history.zsh

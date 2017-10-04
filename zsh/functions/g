@@ -1,9 +1,1 @@
-# No arguments: `git status`
-# With arguments: acts like `git`
-g() {
-  if [[ $# -gt 0 ]]; then
-    git "$@"
-  else
-    git status
-  fi
-}
+/Users/prabin_varma/Documents/Github/dotfiles/zsh/functions/g

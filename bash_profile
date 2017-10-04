@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Load RVM, if you are using it
-#source ~/.profile
+source ~/.profile
 
 # source /Users/prabin_varma/.dnx/dnvm/dnvm.sh
 

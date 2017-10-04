@@ -1,6 +1,1 @@
-# load our own completion functions
-fpath=(~/.zsh/completion /usr/local/share/zsh/site-functions $fpath)
-
-# completion
-autoload -U compinit
-compinit
+/Users/prabin_varma/Documents/Github/dotfiles/zsh/configs/post/completion.zsh

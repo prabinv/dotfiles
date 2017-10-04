@@ -1,2 +1,1 @@
-export VISUAL=vim
-export EDITOR=$VISUAL
+/Users/prabin_varma/Documents/Github/dotfiles/zsh/configs/editor.zsh
